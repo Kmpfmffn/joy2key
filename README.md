@@ -1,4 +1,4 @@
-# joy2key by kmpfmffn
+# Joy2key by kmpfmffn
 
 <p>
 Joy2key application that <b>simulates keyboard and mouse input</b> from <b>gamepad input</b>.

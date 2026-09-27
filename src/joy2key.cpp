@@ -1,10 +1,11 @@
-#include <fcntl.h>
-#include <linux/input.h>
-#include <unistd.h>
-#include <iostream>
-
-#include <linux/uinput.h>
 #include <string.h>
+#include <iostream>
+#include <vector>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
 
 
 #define TM_BUTTON_1 304
@@ -18,7 +19,7 @@
 #define TM_BUTTON_LEFT 312
 #define TM_BUTTON_RIGHT 313
 #define TM_BUTTON_JOY1 314
-#define TM_BUTTON_JOY5 315
+#define TM_BUTTON_JOY2 315
 
 #define TM_DPAD_HORIZONTAL 16
 #define TM_DPAD_VERTICAL 17
@@ -162,8 +163,80 @@ class Mouse {
     int m_ScrollSpeedH;
 };
 
+enum InputType {
+    KEY = 0,
+    MOUSE
+};
+enum KeyAction {
+    PRESS = 0,
+    HOLD,
+    RELEASE
+};
+
+// A key or mouse button
+struct Key {
+    int m_Keycode;
+    InputType m_Type;
+    KeyAction m_Action;
+};
+
+// Corresponding to a button on the Gamepad
+class Button {
+  public:
+    Button(unsigned short code, std::string name) : m_Code(code), m_Name(name) { }
+    void addKey(int keycode, InputType type, KeyAction action) {
+        m_Keys.push_back(Key(keycode, type, action));
+    }
+  private:
+    unsigned short m_Code;
+    std::string m_Name;
+    std::vector<Key> m_Keys;
+};
+
+class Gamepad {
+  public:
+    //void addButton(std::string name, int keycode) { m_Buttons[name] = keycode; }
+    void newButton(unsigned short code, std::string name) {
+        m_Buttons.push_back(Button(code, name));
+    }
+    void addKeyToButton(unsigned short code, Key key) {
+        
+    }
+    void addKeyToButton(std::string name, Key key) {
+
+    }
+  private:
+    std::vector<Button> m_Buttons;
+    //std::unordered_map<std::string, int> m_Buttons; // stores custom names for gamepad buttons and the corresponding keycodes
+};
+/*
+workflow:
+    load json file -> open joy -> open uinput -> register ioctl input-codes -> ioctl register device -> main loop
+    btnCode -> custom name -> keycode -> action(press, hold, release)
+*/
 
 int main() {
+    Gamepad gamepad;
+    // following will be executed from loaded config file
+    gamepad.newButton(304, "TM_BUTTON_1");
+    gamepad.addKeyToButton("TM_BUTTON_1", Key(KEY_SPACE, InputType::KEY, KeyAction::PRESS));
+
+    gamepad.newButton(305, "TM_BUTTON_2");
+    gamepad.newButton(306, "TM_BUTTON_3");
+    gamepad.newButton(307, "TM_BUTTON_4");
+    gamepad.newButton(308, "TM_BUTTON_5");
+    gamepad.newButton(309, "TM_BUTTON_6");
+    gamepad.newButton(310, "TM_BUTTON_7");
+    gamepad.newButton(311, "TM_BUTTON_8");
+    gamepad.newButton(312, "TM_BUTTON_LEFT");
+    gamepad.newButton(313, "TM_BUTTON_RIGHT");
+    gamepad.newButton(314, "TM_BUTTON_JOY1");
+    gamepad.newButton(315, "TM_BUTTON_JOY2");
+    
+    
+    
+    
+    
     // open joystick
     std::string joystickPath = "/dev/input/event2";
     int joystick = open(joystickPath.c_str(), O_RDONLY | O_NONBLOCK);
